@@ -68,7 +68,7 @@ async function initMap() {
     const yellowMarker = 'src/img/yellowMarker.png';
     const markers = [];
     let deals;
-    let coordinates;
+    let coordinates
 
     try {
         deals = await getDeals()
