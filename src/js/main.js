@@ -54,7 +54,8 @@ async function getDeals() {
         //получаем координаты и подготавливаем для вывода на карту
         let place = getPlaceFromDeal(el.UF_CRM_1598808869287);
         let deal = new Deal(el.ID, el.STAGE_ID, el.TITLE, place)
-        arr.set(el.STAGE_ID, deal);
+        arr.set(el.STAGE_ID, [deal]);
+        s
     })
 
     return arr;
