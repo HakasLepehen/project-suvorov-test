@@ -14,6 +14,15 @@ class Deal {
     }
 }
 
+const FIRST_STAGE = 'NEW';
+const SECOND_STAGE = 'PREPARATION';
+const THIRD_STAGE = 'PREPAYMENT_INVOICE';
+
+function getCategoryOfDeals(str, map) {
+    let array = [];
+    return array = map.get(str);
+}
+
 function getPlaceFromDeal(str) {
     let dealIncompleteAddress = (str);
     let invalidCoordinates = dealIncompleteAddress.split('|');
@@ -22,11 +31,15 @@ function getPlaceFromDeal(str) {
 }
 
 async function getDeals() {
-    const arr = new Map();
+    const map = new Map([
+        [FIRST_STAGE, []],
+        [SECOND_STAGE, []],
+        [THIRD_STAGE, []]
+    ]);
     const result = [
         {
             ID: '2',
-            STAGE_ID: 'NEW',
+            STAGE_ID: "NEW",
             TITLE: "Анализ заправок.",
             UF_CRM_1598808869287: "улица 10 лет Октября, 90к1, Омск, Russia|54.984951;73.4012343"
         },
@@ -49,30 +62,36 @@ async function getDeals() {
             UF_CRM_1598808869287: "Здание сельскохозяйственного училища, Институтская площадь, Омск, Russia|55.0225655;73.31209559999999",
         }
     ];
+
     result.forEach(el => {
         console.log(el);
         //получаем координаты и подготавливаем для вывода на карту
         let place = getPlaceFromDeal(el.UF_CRM_1598808869287);
-        let deal = new Deal(el.ID, el.STAGE_ID, el.TITLE, place)
-        arr.set(el.STAGE_ID, [deal]);
-        s
+        let deal = new Deal(el.ID, el.STAGE_ID, el.TITLE, place);
+        map.get(el.STAGE_ID).push(deal);
     })
 
-    return arr;
+    for (let val of map.keys()) {
+        console.log(map.get(val));
+    }
+
+    return map;
 }
 
 async function initMap() {
-
+    let  dealsMap = new Map()
     const greenMarker = 'src/img/greenMarker.png';
     const blueMarker = 'src/img/blueMarker.png';
     const yellowMarker = 'src/img/yellowMarker.png';
     const markers = [];
-    let deals;
+    let deals, newDeals;
     let coordinates
 
     try {
-        deals = await getDeals()
-        coordinates = deals.map(deal => deal.place);
+
+        dealsMap = await getDeals();
+        newDeals = getCategoryOfDeals(FIRST_STAGE, dealsMap);
+        coordinates = newDeals.map(deal => deal.place);
     } catch (e) {
         // тут обрабатываем ошибку #{1}
         return console.error(e);
@@ -90,15 +109,14 @@ async function initMap() {
     // });
 
 
-
-
-    const greenMarkers = deals.map((_pos) => new google.maps.Marker({
+    let greenMarkers = newDeals.map((_pos) => new google.maps.Marker({
         position: _pos.place,
-        icon: greenMarker
+        icon: 'src/img/marker.svg',
+        size: {height: 32, width: 32}
     }));
 
-    markers.push(greenMarkers);
 
+    markers.push(...greenMarkers);
 
 
     console.log(markers);
