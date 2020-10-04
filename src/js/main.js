@@ -31,6 +31,7 @@ function getPlaceFromDeal(str) {
         let invalidCoordinates = str.split('|');
         if (!invalidCoordinates || invalidCoordinates.length !== 2) return null;
             let destination = invalidCoordinates[1].split(';');
+            if (isNaN(parseFloat(destination[0])) || isNaN(parseFloat(destination[1]))) return null;
             return new Place(parseFloat(destination[0]), parseFloat(destination[1]));
 }
 
