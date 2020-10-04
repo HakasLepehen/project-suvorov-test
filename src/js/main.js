@@ -79,18 +79,20 @@ async function getDeals() {
 }
 
 async function initMap() {
-    let  dealsMap = new Map()
+    let  dealsMap = new Map();
     const blueMarker = './src/img/blueMarker.svg';
-    const yellowMarker = './src/img/yellowMarker.png';
-    const greenMarker = './src/img/yellowMarker.png';
+    const yellowMarker = './src/img/yellowMarker.svg';
+    const greenMarker = './src/img/greenMarker.svg';
     const markers = [];
-    let deals, newDeals;
-    let coordinates
+    let newDeals, serviceDeals, plannedDeals;
+    let coordinates;
 
     try {
 
         dealsMap = await getDeals();
         newDeals = getCategoryOfDeals(FIRST_STAGE, dealsMap);
+        serviceDeals = getCategoryOfDeals(SECOND_STAGE, dealsMap);
+        plannedDeals = getCategoryOfDeals(THIRD_STAGE, dealsMap);
         coordinates = newDeals.map(deal => deal.place);
     } catch (e) {
         // тут обрабатываем ошибку #{1}
@@ -109,13 +111,21 @@ async function initMap() {
     // });
 
 
-    let greenMarkers = newDeals.map((_pos) => new google.maps.Marker({
+    let blueMarkers = newDeals.map((_pos) => new google.maps.Marker({
         position: _pos.place,
         icon: blueMarker
     }));
+    let yellowMarkers = serviceDeals.map((_pos) => new google.maps.Marker({
+        position: _pos.place,
+        icon: yellowMarker
+    }));
+    let greenMarkers = plannedDeals.map((_pos) => new google.maps.Marker({
+        position: _pos.place,
+        icon: greenMarker
+    }));
 
 
-    markers.push(...greenMarkers);
+    markers.push(...blueMarkers, ...yellowMarkers, ...greenMarkers);
 
 
     console.log(markers);
