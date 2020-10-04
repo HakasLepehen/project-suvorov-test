@@ -1,3 +1,7 @@
+const FIRST_STAGE = 'NEW';
+const SECOND_STAGE = 'PREPARATION';
+const THIRD_STAGE = 'PREPAYMENT_INVOICE';
+
 class Place {
     constructor(lat, long) {
         this.lat = lat;
@@ -13,10 +17,6 @@ class Deal {
         this.place = place;
     }
 }
-
-const FIRST_STAGE = 'NEW';
-const SECOND_STAGE = 'PREPARATION';
-const THIRD_STAGE = 'PREPAYMENT_INVOICE';
 
 function getCategoryOfDeals(str, map) {
     let array = [];
@@ -69,7 +69,7 @@ async function getDeals() {
         let place = getPlaceFromDeal(el.UF_CRM_1598808869287);
         let deal = new Deal(el.ID, el.STAGE_ID, el.TITLE, place);
         map.get(el.STAGE_ID).push(deal);
-    })
+    });
 
     for (let val of map.keys()) {
         console.log(map.get(val));
@@ -79,17 +79,12 @@ async function getDeals() {
 }
 
 async function initMap() {
-    let  dealsMap = new Map();
-    const blueMarker = './src/img/blueMarker.svg';
-    const yellowMarker = './src/img/yellowMarker.svg';
-    const greenMarker = './src/img/greenMarker.svg';
     const markers = [];
     let newDeals, serviceDeals, plannedDeals;
     let coordinates;
 
     try {
-
-        dealsMap = await getDeals();
+        let dealsMap = await getDeals();
         newDeals = getCategoryOfDeals(FIRST_STAGE, dealsMap);
         serviceDeals = getCategoryOfDeals(SECOND_STAGE, dealsMap);
         plannedDeals = getCategoryOfDeals(THIRD_STAGE, dealsMap);
@@ -110,23 +105,20 @@ async function initMap() {
     //     content: 'Hello Moto!'
     // });
 
-
     let blueMarkers = newDeals.map((_pos) => new google.maps.Marker({
         position: _pos.place,
-        icon: blueMarker
+        icon: './src/img/blueMarker.svg'
     }));
     let yellowMarkers = serviceDeals.map((_pos) => new google.maps.Marker({
         position: _pos.place,
-        icon: yellowMarker
+        icon: './src/img/yellowMarker.svg'
     }));
     let greenMarkers = plannedDeals.map((_pos) => new google.maps.Marker({
         position: _pos.place,
-        icon: greenMarker
+        icon: './src/img/greenMarker.svg'
     }));
 
-
     markers.push(...blueMarkers, ...yellowMarkers, ...greenMarkers);
-
 
     console.log(markers);
 
@@ -139,7 +131,6 @@ async function initMap() {
             lng: avg[1] / markers.length,
         });
     }
-
 
     // Add a marker clusterer to manage the markers.
     const markerCluster = new MarkerClusterer(
