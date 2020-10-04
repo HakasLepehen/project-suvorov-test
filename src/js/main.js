@@ -24,10 +24,18 @@ function getCategoryOfDeals(str, map) {
 }
 
 function getPlaceFromDeal(str) {
-    let dealIncompleteAddress = (str);
-    let invalidCoordinates = dealIncompleteAddress.split('|');
-    let destination = invalidCoordinates[1].split(';');
-    return new Place(parseFloat(destination[0]), parseFloat(destination[1]));
+    if (str) {
+        let dealIncompleteAddress = (str);
+        let invalidCoordinates = dealIncompleteAddress.split('|');
+        if (invalidCoordinates) {
+            let destination = invalidCoordinates[1].split(';');
+            return new Place(parseFloat(destination[0]), parseFloat(destination[1]));
+        } else {
+            return null;
+        }
+    } else {
+        return null;
+    }
 }
 
 async function getDeals() {
@@ -60,6 +68,12 @@ async function getDeals() {
             STAGE_ID: "PREPAYMENT_INVOICE",
             TITLE: "3-я стадия",
             UF_CRM_1598808869287: "Здание сельскохозяйственного училища, Институтская площадь, Омск, Russia|55.0225655;73.31209559999999",
+        },
+        {
+            ID: "6",
+            STAGE_ID: "PREPAYMENT_INVOICE",
+            TITLE: "3-я стадия",
+            UF_CRM_1598808869287: "",
         }
     ];
 
@@ -67,8 +81,10 @@ async function getDeals() {
         console.log(el);
         //получаем координаты и подготавливаем для вывода на карту
         let place = getPlaceFromDeal(el.UF_CRM_1598808869287);
-        let deal = new Deal(el.ID, el.STAGE_ID, el.TITLE, place);
-        map.get(el.STAGE_ID).push(deal);
+        if (place) {
+            let deal = new Deal(el.ID, el.STAGE_ID, el.TITLE, place);
+            map.get(el.STAGE_ID).push(deal);
+        }
     });
 
     for (let val of map.keys()) {
@@ -81,7 +97,7 @@ async function getDeals() {
 async function initMap() {
     const markers = [];
     let newDeals, serviceDeals, plannedDeals;
-    let coordinates;
+    let coordinates = 0;
 
     try {
         let dealsMap = await getDeals();
@@ -90,6 +106,7 @@ async function initMap() {
         plannedDeals = getCategoryOfDeals(THIRD_STAGE, dealsMap);
         coordinates = newDeals.map(deal => deal.place);
     } catch (e) {
+
         // тут обрабатываем ошибку #{1}
         return console.error(e);
     }
