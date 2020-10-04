@@ -17,6 +17,9 @@ class Deal {
         this.place = place;
     }
 }
+function showCountOfDeals(arr) {
+    return  arr.map(el => el.place).length;
+}
 
 function getCategoryOfDeals(str, map) {
     let array = [];
@@ -24,18 +27,11 @@ function getCategoryOfDeals(str, map) {
 }
 
 function getPlaceFromDeal(str) {
-    if (str) {
-        let dealIncompleteAddress = (str);
-        let invalidCoordinates = dealIncompleteAddress.split('|');
-        if (invalidCoordinates) {
+    if (!str || typeof str !== 'string') return null;
+        let invalidCoordinates = str.split('|');
+        if (!invalidCoordinates || invalidCoordinates.length !== 2) return null;
             let destination = invalidCoordinates[1].split(';');
             return new Place(parseFloat(destination[0]), parseFloat(destination[1]));
-        } else {
-            return null;
-        }
-    } else {
-        return null;
-    }
 }
 
 async function getDeals() {
@@ -73,7 +69,7 @@ async function getDeals() {
             ID: "6",
             STAGE_ID: "PREPAYMENT_INVOICE",
             TITLE: "3-я стадия",
-            UF_CRM_1598808869287: "",
+            UF_CRM_1598808869287: "Здание сельскохозяйственного училища, Институтская площадь, Омск, Russia",
         }
     ];
 
@@ -97,7 +93,6 @@ async function getDeals() {
 async function initMap() {
     const markers = [];
     let newDeals, serviceDeals, plannedDeals;
-    let coordinates = 0;
     let icon = {
         path: "M16.734,0C9.375,0,3.408,5.966,3.408,13.325c0,11.076,13.326,20.143,13.326,20.143S30.06,23.734,30.06,13.324        " +
             "C30.06,5.965,24.093,0,16.734,0z M16.734,19.676c-3.51,0-6.354-2.844-6.354-6.352c0-3.508,2.844-6.352,6.354-6.352        " +
@@ -111,7 +106,6 @@ async function initMap() {
         newDeals = getCategoryOfDeals(FIRST_STAGE, dealsMap);
         serviceDeals = getCategoryOfDeals(SECOND_STAGE, dealsMap);
         plannedDeals = getCategoryOfDeals(THIRD_STAGE, dealsMap);
-        coordinates = newDeals.map(deal => deal.place);
     } catch (e) {
 
         // тут обрабатываем ошибку #{1}
@@ -124,7 +118,9 @@ async function initMap() {
     );
 
     // let labels = 'ABC';
-    console.log(`На карте будет ${coordinates.length} маркеров`);
+    console.log(`На карте будет ${newDeals.length} новых сделок`);
+    console.log(`На карте будет ${serviceDeals.length} сервисных сделок`);
+    console.log(`На карте будет ${plannedDeals.length} запланированных сделок`);
     // const infowindow = new google.maps.InfoWindow({
     //     content: 'Hello Moto!'
     // });
