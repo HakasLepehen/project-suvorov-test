@@ -98,6 +98,13 @@ async function initMap() {
     const markers = [];
     let newDeals, serviceDeals, plannedDeals;
     let coordinates = 0;
+    let icon = {
+        path: "M16.734,0C9.375,0,3.408,5.966,3.408,13.325c0,11.076,13.326,20.143,13.326,20.143S30.06,23.734,30.06,13.324        " +
+            "C30.06,5.965,24.093,0,16.734,0z M16.734,19.676c-3.51,0-6.354-2.844-6.354-6.352c0-3.508,2.844-6.352,6.354-6.352        " +
+            "c3.508-0.001,6.352,2.845,6.352,6.353C23.085,16.833,20.242,19.676,16.734,19.676z",
+        fillOpacity: 0.8,
+        anchor: new google.maps.Point(16, 32)
+    };
 
     try {
         let dealsMap = await getDeals();
@@ -124,15 +131,15 @@ async function initMap() {
 
     let blueMarkers = newDeals.map((_pos) => new google.maps.Marker({
         position: _pos.place,
-        icon: './src/img/blueMarker.svg'
+        icon: Object.assign(icon, {fillColor: '#66afe9'})
     }));
     let yellowMarkers = serviceDeals.map((_pos) => new google.maps.Marker({
         position: _pos.place,
-        icon: './src/img/yellowMarker.svg'
+        icon: Object.assign(icon, {fillColor: '#fff300'})
     }));
     let greenMarkers = plannedDeals.map((_pos) => new google.maps.Marker({
         position: _pos.place,
-        icon: './src/img/greenMarker.svg'
+        icon: Object.assign(icon, {fillColor: '#00a74c'})
     }));
 
     markers.push(...blueMarkers, ...yellowMarkers, ...greenMarkers);
