@@ -145,20 +145,22 @@ async function initMap() {
 
     markers.forEach((marker) => {
         let content;
+        let position = marker.getPosition();
 
-        const infoWindow = new google.maps.InfoWindow();
-        marker.addEventListener('click', function () {
-            let position = marker.getPosition();
+        for (let deals of dealsMap.keys()) {
+            dealsMap.get(deals).forEach(el => {
+                if (position.lat === el.place.lat && position.lng === el.place.lng) {
+                    content = el.title;
+                }
+            })
+        }
+        const infoWindow = new google.maps.InfoWindow({
+            content: content
+        });
+        marker.addListener('click', function () {
 
-            for (let deals of dealsMap.keys()) {
-                dealsMap.get(deals).forEach(el => {
-                    if (position.lat === el.place.lat && position.lng === el.place.lng) {
-                        content = el.title;
-                    }
-                })
-            }
-            infoWindow.setContent(content);
-            infoWindow.open();
+
+            infoWindow.open(map, marker);
         })
     })
 
