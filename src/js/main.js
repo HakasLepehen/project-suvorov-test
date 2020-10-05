@@ -10,11 +10,13 @@ class Place {
 }
 
 class Deal {
-    constructor(id, stage, title, place) {
+    constructor(id, stage, company_id, title, place, comments) {
         this.id = id;
         this.stage = stage;
+        this.company_id = company_id;
         this.title = title;
         this.place = place;
+        this.comments = comments;
     }
 }
 
@@ -36,6 +38,31 @@ function getPlaceFromDeal(str) {
     return new Place(Number(destination[0]), Number(destination[1]));
 }
 
+async function getCompanyTitle(id) {
+    return new Promise(resolve => {
+
+        BX24.callMethod("crm.company.get", {
+                id: id
+            },
+            function (result) {
+                if (result.error()) {
+                    throw new Error(result.error())
+                }
+                console.log(result.data())
+
+                result.data().forEach(el => {
+                    if (!el) {
+                        console.log(`Компании с указанным ${id} не существует`)
+                    } else {
+
+                    }
+
+                })
+            }
+        )
+    })
+}
+
 async function getDeals() {
     const map = new Map([
         [FIRST_STAGE, []],
@@ -47,31 +74,49 @@ async function getDeals() {
             ID: '2',
             STAGE_ID: "NEW",
             TITLE: "Анализ заправок.",
-            UF_CRM_1598808869287: "улица 10 лет Октября, 90к1, Омск, Russia|54.984951;73.4012343"
+            COMPANY_ID: "0",
+            UF_CRM_1598808869287: "улица 10 лет Октября, 90к1, Омск, Russia|54.984951;73.4012343",
+            COMMENTS: null
         },
         {
             ID: "8",
             STAGE_ID: "NEW",
             TITLE: "Дать сала Андрюшке",
-            UF_CRM_1598808869287: "Исилькуль, Omsk Oblast, Russia|54.916529;71.266638"
+            COMPANY_ID: "2",
+            UF_CRM_1598808869287: "Исилькуль, Omsk Oblast, Russia|54.916529;71.266638",
+            COMMENTS: null
         },
         {
             ID: "4",
             STAGE_ID: "PREPARATION",
             TITLE: "2-я стадия",
-            UF_CRM_1598808869287: "улица Добровольского, 8, Омск, Russia|54.9991464;73.3605812"
+            COMPANY_ID: "0",
+            UF_CRM_1598808869287: "улица Добровольского, 8, Омск, Russia|54.9991464;73.3605812",
+            COMMENTS: null
         },
         {
             ID: "6",
             STAGE_ID: "PREPAYMENT_INVOICE",
             TITLE: "3-я стадия",
+            COMPANY_ID: "2",
             UF_CRM_1598808869287: "Здание сельскохозяйственного училища, Институтская площадь, Омск, Russia|55.0225655;73.31209559999999",
+            COMMENTS: null
         },
         {
             ID: "6",
             STAGE_ID: "PREPAYMENT_INVOICE",
             TITLE: "3-я стадия",
+            COMPANY_ID: "2",
             UF_CRM_1598808869287: "Здание сельскохозяйственного училища, Институтская площадь, Омск, Russia",
+            COMMENTS: null
+        },
+        {
+            ID: "10",
+            STAGE_ID: "NEW",
+            COMPANY_ID: "2",
+            TITLE: "Огрести от начальства",
+            UF_CRM_1598808869287: "Пригородная улица, 17/2, Омск, Russia|55.022999;73.2624909",
+            COMMENTS: ""
         }
     ];
 
@@ -80,7 +125,7 @@ async function getDeals() {
         //получаем координаты и подготавливаем для вывода на карту
         let place = getPlaceFromDeal(el.UF_CRM_1598808869287);
         if (place) {
-            let deal = new Deal(el.ID, el.STAGE_ID, el.TITLE, place);
+            let deal = new Deal(el.ID, el.STAGE_ID, el.COMPANY_ID, el.TITLE, place, el.COMMENTS);
             map.get(el.STAGE_ID).push(deal);
         }
     });
@@ -153,7 +198,7 @@ async function initMap() {
             for (let deals of dealsMap.keys()) {
                 dealsMap.get(deals).forEach(el => {
                     if (position.lat() === el.place.lat && position.lng() === el.place.lng) {
-                        console.log(`Маркеру присвоен контент ${el.title}`)
+
                         content = el.title;
                     }
                 })
