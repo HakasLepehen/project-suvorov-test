@@ -10,11 +10,13 @@ class Place {
 }
 
 class Deal {
-    constructor(id, stage, title, place) {
+    constructor(id, stage, company_id, title, place, comments) {
         this.id = id;
         this.stage = stage;
+        this.company_id = company_id;
         this.title = title;
         this.place = place;
+        this.comments = comments;
     }
 }
 
@@ -32,8 +34,33 @@ function getPlaceFromDeal(str) {
     let invalidCoordinates = str.split('|');
     if (!invalidCoordinates || invalidCoordinates.length !== 2) return null;
     let destination = invalidCoordinates[1].split(';');
-    if (isNaN(parseFloat(destination[0])) || isNaN(parseFloat(destination[1]))) return null;
-    return new Place(parseFloat(destination[0]), parseFloat(destination[1]));
+    if (isNaN(Number(destination[0])) || isNaN(Number(destination[1]))) return null;
+    return new Place(Number(destination[0]), Number(destination[1]));
+}
+
+async function getCompanyTitle(id) {
+    return new Promise(resolve => {
+
+        BX24.callMethod("crm.company.get", {
+                id: id
+            },
+            function (result) {
+                if (result.error()) {
+                    throw new Error(result.error())
+                }
+                console.log(result.data())
+
+                result.data().forEach(el => {
+                    if (!el) {
+                        console.log(`Компании с указанным ${id} не существует`)
+                    } else {
+
+                    }
+
+                })
+            }
+        )
+    })
 }
 
 async function getDeals() {
@@ -47,31 +74,49 @@ async function getDeals() {
             ID: '2',
             STAGE_ID: "NEW",
             TITLE: "Анализ заправок.",
-            UF_CRM_1598808869287: "улица 10 лет Октября, 90к1, Омск, Russia|54.984951;73.4012343"
+            COMPANY_ID: "0",
+            UF_CRM_1598808869287: "улица 10 лет Октября, 90к1, Омск, Russia|54.984951;73.4012343",
+            COMMENTS: null
         },
         {
             ID: "8",
             STAGE_ID: "NEW",
             TITLE: "Дать сала Андрюшке",
-            UF_CRM_1598808869287: "Исилькуль, Omsk Oblast, Russia|54.916529;71.266638"
+            COMPANY_ID: "2",
+            UF_CRM_1598808869287: "Исилькуль, Omsk Oblast, Russia|54.916529;71.266638",
+            COMMENTS: null
         },
         {
             ID: "4",
             STAGE_ID: "PREPARATION",
             TITLE: "2-я стадия",
-            UF_CRM_1598808869287: "улица Добровольского, 8, Омск, Russia|54.9991464;73.3605812"
+            COMPANY_ID: "0",
+            UF_CRM_1598808869287: "улица Добровольского, 8, Омск, Russia|54.9991464;73.3605812",
+            COMMENTS: null
         },
         {
             ID: "6",
             STAGE_ID: "PREPAYMENT_INVOICE",
             TITLE: "3-я стадия",
+            COMPANY_ID: "2",
             UF_CRM_1598808869287: "Здание сельскохозяйственного училища, Институтская площадь, Омск, Russia|55.0225655;73.31209559999999",
+            COMMENTS: null
         },
         {
             ID: "6",
             STAGE_ID: "PREPAYMENT_INVOICE",
             TITLE: "3-я стадия",
+            COMPANY_ID: "2",
             UF_CRM_1598808869287: "Здание сельскохозяйственного училища, Институтская площадь, Омск, Russia",
+            COMMENTS: null
+        },
+        {
+            ID: "10",
+            STAGE_ID: "NEW",
+            COMPANY_ID: "2",
+            TITLE: "Огрести от начальства",
+            UF_CRM_1598808869287: "Пригородная улица, 17/2, Омск, Russia|55.022999;73.2624909",
+            COMMENTS: ""
         }
     ];
 
@@ -80,7 +125,7 @@ async function getDeals() {
         //получаем координаты и подготавливаем для вывода на карту
         let place = getPlaceFromDeal(el.UF_CRM_1598808869287);
         if (place) {
-            let deal = new Deal(el.ID, el.STAGE_ID, el.TITLE, place);
+            let deal = new Deal(el.ID, el.STAGE_ID, el.COMPANY_ID, el.TITLE, place, el.COMMENTS);
             map.get(el.STAGE_ID).push(deal);
         }
     });
@@ -94,7 +139,7 @@ async function getDeals() {
 
 async function initMap() {
     const markers = [];
-    let newDeals, serviceDeals, plannedDeals;
+    let dealsMap, newDeals, serviceDeals, plannedDeals;
     let icon = {
         path: "M16.734,0C9.375,0,3.408,5.966,3.408,13.325c0,11.076,13.326,20.143,13.326,20.143S30.06,23.734,30.06,13.324        " +
             "C30.06,5.965,24.093,0,16.734,0z M16.734,19.676c-3.51,0-6.354-2.844-6.354-6.352c0-3.508,2.844-6.352,6.354-6.352        " +
@@ -104,7 +149,7 @@ async function initMap() {
     };
 
     try {
-        let dealsMap = await getDeals();
+        dealsMap = await getDeals();
         newDeals = getCategoryOfDeals(FIRST_STAGE, dealsMap);
         serviceDeals = getCategoryOfDeals(SECOND_STAGE, dealsMap);
         plannedDeals = getCategoryOfDeals(THIRD_STAGE, dealsMap);
@@ -119,18 +164,19 @@ async function initMap() {
         document.getElementById('map'), {zoom: 6}
     );
 
-    // let labels = 'ABC';
     console.log(`На карте будет ${newDeals.length} новых сделок`);
     console.log(`На карте будет ${serviceDeals.length} сервисных сделок`);
     console.log(`На карте будет ${plannedDeals.length} запланированных сделок`);
-    // const infowindow = new google.maps.InfoWindow({
-    //     content: 'Hello Moto!'
-    // });
 
-    let blueMarkers = newDeals.map((_pos) => new google.maps.Marker({
-        position: _pos.place,
-        icon: Object.assign(icon, {fillColor: '#66afe9'})
-    }));
+    let blueMarkers = newDeals.map((_pos) => {
+        return new google.maps.Marker({
+            position: _pos.place,
+            icon: Object.assign(icon, {fillColor: '#66afe9'})
+        })
+        // const infoWindow = new google.maps.InfoWindow({
+        //     content: _pos.title,
+        // });
+    });
     let yellowMarkers = serviceDeals.map((_pos) => new google.maps.Marker({
         position: _pos.place,
         icon: Object.assign(icon, {fillColor: '#fff300'})
@@ -141,6 +187,29 @@ async function initMap() {
     }));
 
     markers.push(...blueMarkers, ...yellowMarkers, ...greenMarkers);
+
+    markers.forEach((marker) => {
+        let content;
+
+        marker.addListener('click', () => {
+
+            let position = marker.getPosition();
+
+            for (let deals of dealsMap.keys()) {
+                dealsMap.get(deals).forEach(el => {
+                    if (position.lat() === el.place.lat && position.lng() === el.place.lng) {
+
+                        content = el.title;
+                    }
+                })
+            }
+            console.log(content);
+            const infoWindow = new google.maps.InfoWindow({
+                content: content,
+            });
+            infoWindow.open(map, marker);
+        })
+    })
 
     console.log(markers);
 
