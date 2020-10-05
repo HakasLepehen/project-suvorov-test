@@ -17,8 +17,9 @@ class Deal {
         this.place = place;
     }
 }
+
 function showCountOfDeals(arr) {
-    return  arr.map(el => el.place).length;
+    return arr.map(el => el.place).length;
 }
 
 function getCategoryOfDeals(str, map) {
@@ -28,11 +29,11 @@ function getCategoryOfDeals(str, map) {
 
 function getPlaceFromDeal(str) {
     if (!str || typeof str !== 'string') return null;
-        let invalidCoordinates = str.split('|');
-        if (!invalidCoordinates || invalidCoordinates.length !== 2) return null;
-            let destination = invalidCoordinates[1].split(';');
-            if (isNaN(parseFloat(destination[0])) || isNaN(parseFloat(destination[1]))) return null;
-            return new Place(parseFloat(destination[0]), parseFloat(destination[1]));
+    let invalidCoordinates = str.split('|');
+    if (!invalidCoordinates || invalidCoordinates.length !== 2) return null;
+    let destination = invalidCoordinates[1].split(';');
+    if (isNaN(parseFloat(destination[0])) || isNaN(parseFloat(destination[1]))) return null;
+    return new Place(parseFloat(destination[0]), parseFloat(destination[1]));
 }
 
 async function getDeals() {
