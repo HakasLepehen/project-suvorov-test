@@ -17,8 +17,9 @@ class Deal {
         this.place = place;
     }
 }
+
 function showCountOfDeals(arr) {
-    return  arr.map(el => el.place).length;
+    return arr.map(el => el.place).length;
 }
 
 function getCategoryOfDeals(str, map) {
@@ -28,11 +29,11 @@ function getCategoryOfDeals(str, map) {
 
 function getPlaceFromDeal(str) {
     if (!str || typeof str !== 'string') return null;
-        let invalidCoordinates = str.split('|');
-        if (!invalidCoordinates || invalidCoordinates.length !== 2) return null;
-            let destination = invalidCoordinates[1].split(';');
-            if (isNaN(parseFloat(destination[0])) || isNaN(parseFloat(destination[1]))) return null;
-            return new Place(parseFloat(destination[0]), parseFloat(destination[1]));
+    let invalidCoordinates = str.split('|');
+    if (!invalidCoordinates || invalidCoordinates.length !== 2) return null;
+    let destination = invalidCoordinates[1].split(';');
+    if (isNaN(Number(destination[0])) || isNaN(Number(destination[1]))) return null;
+    return new Place(Number(destination[0]), Number(destination[1]));
 }
 
 async function getDeals() {
@@ -93,7 +94,7 @@ async function getDeals() {
 
 async function initMap() {
     const markers = [];
-    let newDeals, serviceDeals, plannedDeals;
+    let dealsMap, newDeals, serviceDeals, plannedDeals;
     let icon = {
         path: "M16.734,0C9.375,0,3.408,5.966,3.408,13.325c0,11.076,13.326,20.143,13.326,20.143S30.06,23.734,30.06,13.324        " +
             "C30.06,5.965,24.093,0,16.734,0z M16.734,19.676c-3.51,0-6.354-2.844-6.354-6.352c0-3.508,2.844-6.352,6.354-6.352        " +
@@ -103,7 +104,7 @@ async function initMap() {
     };
 
     try {
-        let dealsMap = await getDeals();
+        dealsMap = await getDeals();
         newDeals = getCategoryOfDeals(FIRST_STAGE, dealsMap);
         serviceDeals = getCategoryOfDeals(SECOND_STAGE, dealsMap);
         plannedDeals = getCategoryOfDeals(THIRD_STAGE, dealsMap);
@@ -118,18 +119,19 @@ async function initMap() {
         document.getElementById('map'), {zoom: 6}
     );
 
-    // let labels = 'ABC';
     console.log(`На карте будет ${newDeals.length} новых сделок`);
     console.log(`На карте будет ${serviceDeals.length} сервисных сделок`);
     console.log(`На карте будет ${plannedDeals.length} запланированных сделок`);
-    // const infowindow = new google.maps.InfoWindow({
-    //     content: 'Hello Moto!'
-    // });
 
-    let blueMarkers = newDeals.map((_pos) => new google.maps.Marker({
-        position: _pos.place,
-        icon: Object.assign(icon, {fillColor: '#66afe9'})
-    }));
+    let blueMarkers = newDeals.map((_pos) => {
+        return new google.maps.Marker({
+            position: _pos.place,
+            icon: Object.assign(icon, {fillColor: '#66afe9'})
+        })
+        // const infoWindow = new google.maps.InfoWindow({
+        //     content: _pos.title,
+        // });
+    });
     let yellowMarkers = serviceDeals.map((_pos) => new google.maps.Marker({
         position: _pos.place,
         icon: Object.assign(icon, {fillColor: '#fff300'})
@@ -140,6 +142,25 @@ async function initMap() {
     }));
 
     markers.push(...blueMarkers, ...yellowMarkers, ...greenMarkers);
+
+    markers.forEach((marker) => {
+        let content;
+
+        const infoWindow = new google.maps.InfoWindow();
+        marker.addEventListener('click', function () {
+            let position = marker.getPosition();
+
+            for (let deals of dealsMap.keys()) {
+                dealsMap.get(deals).forEach(el => {
+                    if (position.lat === el.place.lat && position.lng === el.place.lng) {
+                        content = el.title;
+                    }
+                })
+            }
+            infoWindow.setContent(content);
+            infoWindow.open();
+        })
+    })
 
     console.log(markers);
 
