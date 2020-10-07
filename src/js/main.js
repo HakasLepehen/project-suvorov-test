@@ -117,6 +117,14 @@ async function getDeals() {
             TITLE: "Огрести от начальства",
             UF_CRM_1598808869287: "Пригородная улица, 17/2, Омск, Russia|55.022999;73.2624909",
             COMMENTS: ""
+        },
+        {
+            ID: "11",
+            STAGE_ID: "NEW",
+            COMPANY_ID: "2",
+            TITLE: "Огрести от начальства2",
+            UF_CRM_1598808869287: "Пригородная улица, 17/2, Омск, Russia|55.022999;73.2624909",
+            COMMENTS: ""
         }
     ];
 
@@ -198,7 +206,6 @@ async function initMap() {
             for (let deals of dealsMap.keys()) {
                 dealsMap.get(deals).forEach(el => {
                     if (position.lat() === el.place.lat && position.lng() === el.place.lng) {
-
                         content = el.title;
                     }
                 })
