@@ -1,6 +1,6 @@
-const FIRST_STAGE = 'NEW';
-const SECOND_STAGE = 'PREPARATION';
-const THIRD_STAGE = 'PREPAYMENT_INVOICE';
+const FIRST_STAGE = 'Новая сделка';
+const SECOND_STAGE = 'Сервис';
+const THIRD_STAGE = 'Работы спланированы';
 
 class Place {
     constructor(lat, long) {
@@ -38,6 +38,11 @@ function getPlaceFromDeal(str) {
     return new Place(Number(destination[0]), Number(destination[1]));
 }
 
+function getAddressFromDeal(str) {
+    if (!str || typeof str !== 'string') return null;
+    return str.substring(0, str.lastIndexOf('|')) || null;
+}
+
 async function getCompanyTitle(id) {
     return new Promise(resolve => {
 
@@ -56,7 +61,6 @@ async function getCompanyTitle(id) {
                     } else {
                         return result.data().TITLE
                     }
-
                 })
             }
         )
@@ -145,7 +149,6 @@ async function getDeals() {
             map.get(el.STAGE_ID).push(deal);
         }
     });
-
     for (let val of map.keys()) {
         console.log(map.get(val));
     }
@@ -166,6 +169,8 @@ async function initMap() {
 
     try {
         dealsMap = await getDeals();
+        let places = Array.from(dealsMap).reduce((res, cur) => res.concat(...cur[1]), []).map(deal => deal.place);
+        console.log('Массив локаций', places);
         newDeals = getCategoryOfDeals(FIRST_STAGE, dealsMap);
         serviceDeals = getCategoryOfDeals(SECOND_STAGE, dealsMap);
         plannedDeals = getCategoryOfDeals(THIRD_STAGE, dealsMap);
@@ -177,7 +182,8 @@ async function initMap() {
     const map = new google.maps.Map(
         document.getElementById('map'), {
             zoom: 6,
-            disableDefaultUI: true
+            disableDefaultUI: true,
+            mapTypeId: 'hybrid'
         }
     );
 
@@ -185,15 +191,13 @@ async function initMap() {
     console.log(`На карте будет ${serviceDeals.length} сервисных сделок`);
     console.log(`На карте будет ${plannedDeals.length} запланированных сделок`);
 
+    /** Задаем разные маркеры по типам сделок. Дифференцирование по цвету */
     let blueMarkers = newDeals.map((_pos) => {
         return new google.maps.Marker({
             position: _pos.place,
             icon: Object.assign(icon, {fillColor: '#66afe9'}),
             animation: google.maps.Animation.DROP
         })
-        // const infoWindow = new google.maps.InfoWindow({
-        //     content: _pos.title,
-        // });
     });
     let yellowMarkers = serviceDeals.map((_pos) => new google.maps.Marker({
         position: _pos.place,
@@ -207,6 +211,12 @@ async function initMap() {
     }));
 
     markers.push(...blueMarkers, ...yellowMarkers, ...greenMarkers);
+
+    const same = markers.forEach(el => {
+        el.inde
+    })
+
+    console.log('Одинаковые маркеры', same)
 
     markers.forEach((marker) => {
         let content;
