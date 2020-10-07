@@ -129,6 +129,14 @@ async function getDeals() {
             TITLE: "Огрести от начальства 2",
             UF_CRM_1598808869287: "Пригородная улица, 17/2, Омск, Russia|55.022999;73.2624909",
             COMMENTS: ""
+        },
+        {
+            ID: "10",
+            STAGE_ID: "NEW",
+            COMPANY_ID: "2",
+            TITLE: "Огрести от начальства 3",
+            UF_CRM_1598808869287: "Пригородная улица, 17/2, Омск, Russia|55.022999;73.2624909",
+            COMMENTS: ""
         }
     ];
 
@@ -138,12 +146,15 @@ async function getDeals() {
         let place = getPlaceFromDeal(el.UF_CRM_1598808869287);
         if (place) {
             switch (el.STAGE_ID) {
-                case "NEW": el.STAGE_ID = 'Новая сделка';
-                break;
-                case "PREPARATION": el.STAGE_ID = 'Сервис';
-                break;
-                case "PREPAYMENT_INVOICE": el.STAGE_ID = 'Работы спланированы';
-                break;
+                case "NEW":
+                    el.STAGE_ID = 'Новая сделка';
+                    break;
+                case "PREPARATION":
+                    el.STAGE_ID = 'Сервис';
+                    break;
+                case "PREPAYMENT_INVOICE":
+                    el.STAGE_ID = 'Работы спланированы';
+                    break;
             }
             let deal = new Deal(el.ID, el.STAGE_ID, el.COMPANY_ID, el.TITLE, place, el.COMMENTS);
             map.get(el.STAGE_ID).push(deal);
@@ -212,11 +223,15 @@ async function initMap() {
 
     markers.push(...blueMarkers, ...yellowMarkers, ...greenMarkers);
 
-    const same = markers.forEach(el => {
-        el.inde
-    })
-
-    console.log('Одинаковые маркеры', same)
+    markers.map((marker, index) => {
+        console.log(`позиция маркера ${index}, широта: ${marker.getPosition().lat()}, долгота ${marker.getPosition().lng()}`)
+        const i = markers.findIndex(e => e.getPosition().equals(marker.getPosition()));
+        if (index !== i) {
+            let lng = marker.getPosition().lng() + 0.00009;
+            marker.setPosition({lat: marker.getPosition().lat(), lng: lng})
+            ++index;
+        }
+    });
 
     markers.forEach((marker) => {
         let content;
