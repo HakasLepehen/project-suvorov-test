@@ -10,11 +10,12 @@ class Place {
 }
 
 class Deal {
-    constructor(id, stage, company_id, title, place, comments) {
+    constructor(id, stage, company_id, title, address, place, comments) {
         this.id = id;
         this.stage = stage;
         this.company_id = company_id;
         this.title = title;
+        this.address = address;
         this.place = place;
         this.comments = comments;
     }
@@ -44,24 +45,17 @@ function getAddressFromDeal(str) {
 }
 
 async function getCompanyTitle(id) {
+
     return new Promise(resolve => {
 
         BX24.callMethod("crm.company.get", {
                 id: id
             },
             function (result) {
-                if (result.error()) {
-                    throw new Error(result.error())
-                }
-                console.log(result.data())
-
-                result.data().forEach(el => {
-                    if (!el) {
-                        console.log(`Компании с указанным ${id} не существует`)
-                    } else {
-                        return result.data().TITLE
-                    }
-                })
+                if (result.error())
+                    return resolve('Компании с указанным идентификатором не существует, либо она не указана в карточке сделки.');
+                else
+                    return resolve(result.data().TITLE);
             }
         )
     })
@@ -144,6 +138,7 @@ async function getDeals() {
         console.log(el);
         //получаем координаты и подготавливаем для вывода на карту
         let place = getPlaceFromDeal(el.UF_CRM_1598808869287);
+        let address = getAddressFromDeal(el.UF_CRM_1598808869287);
         if (place) {
             switch (el.STAGE_ID) {
                 case "NEW":
@@ -156,7 +151,7 @@ async function getDeals() {
                     el.STAGE_ID = 'Работы спланированы';
                     break;
             }
-            let deal = new Deal(el.ID, el.STAGE_ID, el.COMPANY_ID, el.TITLE, place, el.COMMENTS);
+            let deal = new Deal(el.ID, el.STAGE_ID, el.COMPANY_ID, el.TITLE, address, place, el.COMMENTS);
             map.get(el.STAGE_ID).push(deal);
         }
     });
@@ -169,6 +164,7 @@ async function getDeals() {
 
 async function initMap() {
     const markers = [];
+    let counter = 0;
     let dealsMap, newDeals, serviceDeals, plannedDeals;
     let icon = {
         path: "M16.734,0C9.375,0,3.408,5.966,3.408,13.325c0,11.076,13.326,20.143,13.326,20.143S30.06,23.734,30.06,13.324        " +
@@ -182,6 +178,15 @@ async function initMap() {
         dealsMap = await getDeals();
         let places = Array.from(dealsMap).reduce((res, cur) => res.concat(...cur[1]), []).map(deal => deal.place);
         console.log('Массив локаций', places);
+
+        places.map((place, index) => {
+            const i = places.findIndex(e => e.lat === place.lat && e.lng === place.lng);
+            if (i !== index) {
+                counter++;
+                places[i].lng = places[i].lng + (counter * 0.00009);
+            }
+        })
+
         newDeals = getCategoryOfDeals(FIRST_STAGE, dealsMap);
         serviceDeals = getCategoryOfDeals(SECOND_STAGE, dealsMap);
         plannedDeals = getCategoryOfDeals(THIRD_STAGE, dealsMap);
@@ -223,15 +228,6 @@ async function initMap() {
 
     markers.push(...blueMarkers, ...yellowMarkers, ...greenMarkers);
 
-    markers.map((marker, index) => {
-        console.log(`позиция маркера ${index}, широта: ${marker.getPosition().lat()}, долгота ${marker.getPosition().lng()}`)
-        const i = markers.findIndex(e => e.getPosition().equals(marker.getPosition()));
-        if (index !== i) {
-            let lng = marker.getPosition().lng() + 0.00009;
-            marker.setPosition({lat: marker.getPosition().lat(), lng: lng})
-            ++index;
-        }
-    });
 
     markers.forEach((marker) => {
         let content;
@@ -245,7 +241,8 @@ async function initMap() {
                     if (position.lat() === el.place.lat && position.lng() === el.place.lng) {
                         content = `<div>Сделка: <span>${el.title}</span></div>
                         <div>Компания: <span>${el.company_id}</span></div>
-                        <div>Тип сделки: <span>${el.stage}</span></div>`;
+                        <div>Тип сделки: <span>${el.stage}</span></div>
+                        <div>Адрес: <span>${el.address}</span></div>`;
                     }
                 })
             }
